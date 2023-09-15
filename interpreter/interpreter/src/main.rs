@@ -1,3 +1,4 @@
+mod parser;
 mod expression;
 
 fn main() {

@@ -13,13 +13,14 @@ enum BinaryOperator {
     Or,
 }
 
-enum LiteralValue {
+pub enum LiteralValue {
    Int(i32), 
    Str(String),
    Boolean(bool), 
 }
 
-enum Expression {
+pub enum Expression {
+    File {expression: Box<Expression>},
     If {condition: Box<Expression>, then_branch: Box<Expression>, else_branch: Box<Expression>},
     FunctionDeclaration {parameters: Vec<String>, body: Box<Expression>},
     Call {calee: Box<Expression>, arguments: Vec<Box<Expression>>},
