@@ -19,6 +19,10 @@ const TUPLE_SECOND_ELEMENT: &str = "second";
 const TUPLE_VALUE: &str = "value";
 const EXPRESSION: &str = "expression";
 
+fn to_string(str: &str) -> String {
+    String::from(str)
+}
+
 enum ExpressionKind {
     Int,
     Str,
@@ -51,7 +55,7 @@ impl ExpressionKind {
           "First" => Some(ExpressionKind::First),
           "Second" => Some(ExpressionKind::Second),
           "Print" => Some(ExpressionKind::Print),
-            None =>  None  
+          _ => None 
       } 
    } 
 }
@@ -60,25 +64,24 @@ pub fn parse(expression_ast: &JsonValue) -> Box<Expression> {
     let expression_kind = ExpressionKind::from_str(expression_ast[KIND].as_str().unwrap()).unwrap();     
     
     match expression_kind {
-        ExpressionKind::Int => parse_int_literal(expression_ast),
-        ExpressionKind::Str => parse_string_literal(expression_ast),
-        ExpressionKind::Var => parse_var(expression_ast),
+        ExpressionKind::Int => parse_int_literal(&expression_ast),
+        ExpressionKind::Str => parse_string_literal(&expression_ast),
+        ExpressionKind::Var => parse_var(&expression_ast),
         ExpressionKind::Let => parse_var_declaration(expression_ast),
-        ExpressionKind::Function => parse_function_declaration(expression_ast),
-        ExpressionKind::Tuple => parse_tuple(expression_ast),
-        ExpressionKind::Tuple => parse_tuple(expression_ast),
-        ExpressionKind::call => parse_call(expression_ast),
-        ExpressionKind::File => parse_file(expression_ast),
-        ExpressionKind::If => parse_if(expression_ast),
-        ExpressionKind::Bool => parse_bool_literal(expression_ast),
-        ExpressionKind::First => parse_first(expression_ast),
-        ExpressionKind::Second => parse_second(expression_ast),
-        ExpressionKind::Print => parse_second(expression_ast),
+        ExpressionKind::Function => parse_function_declaration(&expression_ast),
+        ExpressionKind::Tuple => parse_tuple(&expression_ast),
+        ExpressionKind::Call => parse_call(&expression_ast),
+        ExpressionKind::File => parse_file(&expression_ast),
+        ExpressionKind::If => parse_if(&expression_ast),
+        ExpressionKind::Bool => parse_bool_literal(&expression_ast),
+        ExpressionKind::First => parse_first(&expression_ast),
+        ExpressionKind::Second => parse_second(&expression_ast),
+        ExpressionKind::Print => parse_print(&expression_ast),
     } 
     
 }
 
-fn parse_file(expression_ast: &JsonValue) -> Box<Expression> {
+pub fn parse_file(expression_ast: &JsonValue) -> Box<Expression> {
     let expression: Box<Expression> = parse(&expression_ast[EXPRESSION]);
     
     Box::new(Expression::File {expression})
@@ -121,7 +124,7 @@ fn parse_call(expression_ast: &JsonValue) -> Box<Expression> {
 
 fn parse_function_declaration(expression_ast: &JsonValue) -> Box<Expression> {
     let parameters: Vec<String> = expression_ast[PARAMETERS].members()
-        .map(|parameter| parameter[PARAMETER_NAME].take_string().unwrap())
+        .map(|parameter| parameter[PARAMETER_NAME].as_str().unwrap().to_string())
         .collect();
 
     let body: Box<Expression> = parse(&expression_ast[FUNCTION_BODY]);
@@ -130,13 +133,13 @@ fn parse_function_declaration(expression_ast: &JsonValue) -> Box<Expression> {
 }
 
 fn parse_var(expression_ast: &JsonValue) -> Box<Expression> {
-    let name = expression_ast[VARIABLE_NAME].take_string().unwrap();
+    let name = expression_ast[VARIABLE_NAME].as_str().unwrap().to_string();
 
     Box::new(Expression::VarExpression {name})
 }
 
 fn parse_var_declaration(expression_ast: &JsonValue) -> Box<Expression> {
-    let name: String = expression_ast[VARIABLE_NAME][TEXT].take_string().unwrap();
+    let name: String = expression_ast[VARIABLE_NAME][TEXT].as_str().unwrap().to_string();
     let value: Box<Expression> = parse(&expression_ast[VALUE]);
     let next: Box<Expression> = parse(&expression_ast[NEXT]);
 
@@ -152,7 +155,8 @@ fn parse_if(expression_ast: &JsonValue) -> Box<Expression> {
 }
 
 fn parse_string_literal(expression_ast: &JsonValue) -> Box<Expression> {
-    let value: String = expression_ast[VALUE].take_string().unwrap();
+    let value: String = expression_ast[VALUE].as_str().unwrap().to_string();
+    println!("{}", value);
 
     Box::new(Expression::Literal {value: LiteralValue::Str(value)})
 }
