@@ -4,6 +4,7 @@ use std::path::Path;
 mod parser;
 mod expression;
 mod interpreter;
+mod enviroment;
 
 fn main() {
     let path = Path::new("./asts/print.json");
