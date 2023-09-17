@@ -5,6 +5,8 @@ mod parser;
 mod expression;
 mod interpreter;
 mod enviroment;
+mod language_type;
+mod function;
 
 fn main() {
     let path = Path::new("./asts/print.json");

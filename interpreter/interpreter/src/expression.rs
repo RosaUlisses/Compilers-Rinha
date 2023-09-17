@@ -1,4 +1,4 @@
-enum BinaryOperator {
+pub enum BinaryOperator {
     Addition,
     Subtraction,
     Multiplication,
@@ -6,6 +6,7 @@ enum BinaryOperator {
     Remainder,
     Equal,
     NotEqual,
+    GreaterThan,
     LessThan,
     GreaterThanEqual,
     LessThanEqual,
@@ -22,7 +23,7 @@ pub enum LiteralValue {
 pub enum Expression {
     File {expression: Box<Expression>},
     If {condition: Box<Expression>, then_branch: Box<Expression>, else_branch: Box<Expression>},
-    FunctionDeclaration {parameters: Vec<String>, body: Box<Expression>},
+    Lambda {parameters: Vec<String>, body: Box<Expression>},
     Call {callee: Box<Expression>, arguments: Vec<Box<Expression>>},
     VarDeclaration {name: String, value: Box<Expression>, next: Box<Expression>},
     Binary {left: Box<Expression>, operator: BinaryOperator, right: Box<Expression>},

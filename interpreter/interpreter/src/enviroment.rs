@@ -1,14 +1,9 @@
 use std::collections::HashMap;
-use std::sync::Mutex;
-
-pub enum RinhaType {
-    Int(i32),
-    Str(String)
-}
+use crate::language_type::Type
 
 pub struct Enviroment {
-    variables: HashMap<String, RinhaType>, 
-    enclosing: Option<Box<Enviroment>> 
+    variables: HashMap<String, Type>, 
+    enclosing: Option<Box<&Enviroment>> 
 }
 
 impl Enviroment {
@@ -19,16 +14,22 @@ impl Enviroment {
        } 
     }
     
-    pub fn set_enclosing(&mut self, enclosing: Box<Enviroment>) {
+    pub fn set_enclosing(&mut self, enclosing: Box<&Enviroment>) -> Enviroment {
         self.enclosing = Some(enclosing); 
+        Self
     }
     
-    pub fn set(&mut self, name: String, value: RinhaType) {
+    pub fn set(&mut self, name: String, value: Type) {
         self.variables.insert(name, value);      
     }  
     
-    pub fn get(&mut self, name: String) -> RinhaType{
-        self.variables.get(name).unwrap()
+    pub fn get(&mut self, name: String) -> Type {
+        if self.variables.contains_key(name.as_str()) {
+            self.variables.get(name.as_str()).unwrap().to_owned()
+        }
+        
+        else { 
+            self.enclosing.unwrap().get(name)
+        } 
     }
-    
 }

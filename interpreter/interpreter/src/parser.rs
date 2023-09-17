@@ -129,7 +129,7 @@ fn parse_function_declaration(expression_ast: &JsonValue) -> Box<Expression> {
 
     let body: Box<Expression> = parse(&expression_ast[FUNCTION_BODY]);
 
-    Box::new(Expression::FunctionDeclaration {parameters, body})
+    Box::new(Expression::Lambda {parameters, body})
 }
 
 fn parse_var(expression_ast: &JsonValue) -> Box<Expression> {
