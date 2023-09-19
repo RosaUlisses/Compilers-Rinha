@@ -21,7 +21,7 @@ pub enum LiteralValue {
 }
 
 pub enum Expression {
-    File {expression: Box<Expression>},
+    File {expr: Box<Expression>},
     If {condition: Box<Expression>, then_branch: Box<Expression>, else_branch: Box<Expression>},
     Lambda {parameters: Vec<String>, body: Box<Expression>},
     Call {callee: Box<Expression>, arguments: Vec<Box<Expression>>},

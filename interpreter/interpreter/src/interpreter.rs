@@ -1,124 +1,143 @@
-use std::ops::DerefMut;
+use std::sync::Mutex;
 use crate::expression::{Expression, LiteralValue, BinaryOperator};
 use crate::enviroment::{Enviroment};
+use crate::function;
 use crate::language_type::Type;
+use crate::function::{Function};
+use crate::language_type::Type::Str;
 
-struct Interpreter {
+struct Interpreter<'a> {
     expression: Expression,
-    enviroment: Box<Enviroment>,
+    enviroment: Enviroment<'a>,
 }
 
-impl Interpreter {
+impl<'a> Interpreter<'a> {
     pub fn new(expression: Expression) -> Self {
-        Interpreter { expression: expression, enviroment: Box::new(Enviroment::new()) }
+        Interpreter { expression: expression, enviroment: Enviroment::new() }
     }
 
     pub fn interpret() {}
 
-    pub fn eval(&mut self, expression: &Expression) -> Type {
-        // match expression {
-        //     Expression::File => {}
-        //     Expression::If { .. } => {}
-        //     Expression::FunctionDeclaration { .. } => {}
-        //     Expression::Call { .. } => {}
-        //     Expression::VarDeclaration { .. } => {}
-        //     Expression::Binary { .. } => {}
-        //     Expression::Tuple { .. } => {}
-        //     Expression::VarExpression { .. } => {}
-        //     Expression::Literal { .. } => {}
-        //     Expression::Print { .. } => {}
-        //     Expression::First { .. } => {}
-        //     Expression::Second { .. } => {}
-        // }
+    pub fn eval(&mut self, expression: Expression) -> Type {
+        match expression {
+            Expression::File {expr} => self.eval_file(expr), 
+            Expression::If {condition, then_branch, else_branch} => self.eval_if(condition, then_branch, else_branch),
+            Expression::Lambda {parameters, body} => self.eval_function_declaration(parameters, body),
+            Expression::Call {callee, arguments} => self.eval_call(callee, arguments),
+            Expression::VarDeclaration {name, value, next} => self.eval_var_declaration(name, value, next),
+            Expression::Binary {left, operator, right} => self.eval_binary(left, operator, right),
+            Expression::Tuple {first, second} => self.eval_tuple(first, second),
+            Expression::VarExpression {name} => self.eval_var(name),
+            Expression::Literal {value} => self.eval_literal(value),
+            Expression::Print {value} => self.eval_print(value),
+            Expression::First {tuple} => self.eval_first(tuple),
+            Expression::Second {tuple} => self.eval_second(tuple),
+        }
     }
 
-    fn eval_file(expression: &Expression) {}
+    fn eval_file(&mut self, expression: Box<Expression>) -> Type {
+        self.eval(*expression) 
+    }
 
-    fn eval_if(&mut self, expression: &Expression::If) -> Type {
-        let condition: bool = self.eval(expression.condition).is_truthy(); 
+    fn eval_if(&mut self, condition: Box<Expression>, then_branch: Box<Expression>, else_branch: Box<Expression>) -> Type {
+        let condition: bool = self.eval(*condition).is_truthy(); 
         
         if condition {
-            self.eval(expression.then_branch)
+            self.eval(*then_branch)
         } else {  
-           self.eval(expression.else_branch) 
+           self.eval(*else_branch) 
         } 
     }
 
-    fn eval_function_declaration(&mut self, expression: &Expression::Lambda) {
-        let mut function_enviroment: Enviroment = Enviroment::new();
-        let  aux = self.enviroment.deref_mut();
-        self.enviroment = Box::new(function_enviroment);
-        self.enviroment.set_enclosing(Box::new(aux));
+    fn eval_function_declaration<'b>(&mut self, parameters: Vec<String>, body: Box<Expression>) -> Type {
+        Type::Function(Function::new(parameters, body.as_ref()))
     }
 
-    fn eval_call(expression: &Expression) {}
+    fn eval_call(&mut self, callee: Box<Expression>, arguments: Vec<Box<Expression>>) -> Type {
+        let outer_scope_enviromet: Enviroment = self.enviroment.clone();
+        let function: &mut Function = self.eval(*callee).to_function().unwrap();
 
-    fn eval_var_declaration(&mut self, expression: &Expression::VarDeclaration) -> Type{
-        let name: String = expression.name; 
-        let value: Type = self.eval(expression.value);
-        self.enviroment.set(name, value);
+        let mut evaluated_arguments: Vec<&mut Type>;
+        for argument in arguments {
+            evaluated_arguments.push(&mut self.eval(*argument));    
+        }
+
+        function.parameters.iter()
+            .zip(evaluated_arguments.iter_mut())
+            .for_each(|(parameter_name, parameter_value)| 
+                self.enviroment.set(parameter_name.clone(), parameter_value));
         
-        self.eval(expression.next)
-    }
-    
-    fn eval_binary(&mut self, expression: &Expression::Binary) -> Type {
-        let left: Type = self.eval(expression.left);
-        let right: Type = self.eval(expression.right);
         
-        match expression.operator { 
-            BinaryOperator::Addition => Type::add(left, right).unwrap(),
-            BinaryOperator::Subtraction => Type::sub(left, right).unwrap(),
-            BinaryOperator::Multiplication => Type::mul(left, right).unwrap(),
-            BinaryOperator::Division => Type::div(left, right).unwrap(),
-            BinaryOperator::Remainder => Type::remainder(left, right).unwrap(),
-            BinaryOperator::Equal => Type::Bool(Type::equal(left, right)),
-            BinaryOperator::NotEqual => Type::Bool(Type::not_equal(left, right)),
-            BinaryOperator::GreaterThan => Type::Bool(Type::greater_than(left, right)),
-            BinaryOperator::LessThan => Type::Bool(Type::less_than(left, right)),
-            BinaryOperator::GreaterThanEqual => Type::Bool(Type::greater_than_equal(left, right)),
-            BinaryOperator::LessThanEqual => Type::Bool(Type::less_than_equal(left, right)),
-            BinaryOperator::And => Type::Bool(Type::and(left, right)),
-            BinaryOperator::Or => Type::Bool(Type::or(left, right)),
-        } 
-    }
-    
-    
-    
-    fn eval_tuple(&mut self, expression: &Expression::Tuple) -> Type {
-        let first: Type =  self.eval(expression.first);
-        let second: Type = self.eval(expression.second);
+        let value_to_return = self.eval(function.body);
+        self.enviroment = outer_scope_enviromet;
         
-        Type::Tuple((first, second))
+        value_to_return
+    }
+
+    fn eval_var_declaration(&mut self, name: String, value: Box<Expression>, next: Box<Expression>) -> Type {
+        let name: String = name.clone(); 
+        let value: Type = self.eval(*value);
+        self.enviroment.set(name, &mut value.clone());
+        
+        self.eval(*next)
     }
     
-    fn eval_var(&mut self, expression: &Expression::VarExpression) -> Type {
-        self.enviroment.get(expression.name)
+    fn eval_binary(&mut self, left: Box<Expression>, operator: BinaryOperator, right: Box<Expression>) -> Type {
+        let mut left: Type = self.eval(*left);
+        let mut right: Type = self.eval(*right);
+        
+        let result = match operator { 
+            BinaryOperator::Addition => &mut Type::add(&mut left, &mut right).unwrap(),
+            BinaryOperator::Subtraction => &mut Type::sub(&mut left, &mut right).unwrap(),
+            BinaryOperator::Multiplication => &mut Type::mul(&mut left, &mut right).unwrap(),
+            BinaryOperator::Division => &mut Type::div(&mut left, &mut right).unwrap(),
+            BinaryOperator::Remainder => &mut Type::remainder(&mut left, &mut right).unwrap(),
+            BinaryOperator::Equal => &mut Type::Bool(Type::equal(&mut left, &mut right)),
+            BinaryOperator::NotEqual => &mut Type::Bool(Type::not_equal(&mut left, &mut right)),
+            BinaryOperator::GreaterThan => &mut Type::Bool(Type::greater_than(&mut left, &mut right)),
+            BinaryOperator::LessThan => &mut Type::Bool(Type::less_than(&mut left, &mut right)),
+            BinaryOperator::GreaterThanEqual => &mut Type::Bool(Type::greater_than_equal(&mut left, &mut right)),
+            BinaryOperator::LessThanEqual => &mut Type::Bool(Type::less_than_equal(&mut left, &mut right)),
+            BinaryOperator::And => &mut Type::Bool(Type::and(&mut left, &mut right)),
+            BinaryOperator::Or => &mut Type::Bool(Type::or(&mut left, &mut right)),
+        };
+        
+        result.clone()
     }
     
-    fn eval_literal(&mut self, expression: &Expression::Literal) -> Type {
-       match expression.value {
-           LiteralValue::Str(value) => Type::Str(value),
-           LiteralValue::Int(value) => Type::Int(value),
-           LiteralValue::Bool(value) => Type::Bool(value),
+    
+    
+    fn eval_tuple(&mut self, first: Box<Expression>, second: Box<Expression>) -> Type {
+        let first: Type =  self.eval(*first);
+        let second: Type = self.eval(*second);
+        
+        Type::Tuple((Box::new(first.clone()), Box::new(second.clone())))
+    }
+    
+    fn eval_var(&mut self, name: String) -> Type {
+        self.enviroment.get(name).clone()
+    }
+    
+    fn eval_literal(&mut self, literal_value: LiteralValue) -> Type {
+       match literal_value {
+           LiteralValue::Str(value) => Type::Str(value.clone()),
+           LiteralValue::Int(value) => Type::Int(value.clone()),
+           LiteralValue::Bool(value) => Type::Bool(value.clone()),
        }
     }
     
-    fn eval_print(&mut self, expression: &Expression::Print) -> Type {
-        let value: Type = self.eval(expression.value);
+    fn eval_print(&mut self, value: Box<Expression>) -> Type {
+        let value: Type = self.eval(*value);
         println!("{}", value.to_string());
         
         value
     }
     
-    fn eval_first(&mut self, expression: &Expression::First) -> Type {
-        let tuple = self.eval(expression.tuple).to_tuple().unwrap();
-        
-        tuple.0
+    fn eval_first(&mut self, tuple: Box<Expression>) -> Type {
+        self.eval(*tuple).to_tuple().unwrap().0
     }
 
-    fn eval_second(&mut self, expression: &Expression::Second) -> Type {
-        let tuple = self.eval(expression.tuple).to_tuple().unwrap();
-
-        tuple.1
+    fn eval_second(&mut self, tuple: Box<Expression>) -> Type {
+        self.eval(*tuple).to_tuple().unwrap().1
     }
 }

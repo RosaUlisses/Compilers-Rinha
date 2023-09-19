@@ -1,35 +1,44 @@
+use std::arch::x86_64::_xgetbv;
 use std::collections::HashMap;
-use crate::language_type::Type
+use std::sync::Mutex;
+use crate::function::Function;
+use crate::language_type::Type;
 
-pub struct Enviroment {
-    variables: HashMap<String, Type>, 
-    enclosing: Option<Box<&Enviroment>> 
+pub struct Enviroment<'a> {
+    variables: HashMap<String, &'a mut Type<'a>>, 
 }
 
-impl Enviroment {
+impl<'a> Clone for Enviroment<'a> {
+    fn clone(&self) -> Self {
+        let mut variables: HashMap<String, &'a mut Type<'a>> = HashMap::new();
+        let mut  
+        for (key, value) in self.variables.into_iter() {
+           variables.insert(key, value); 
+        }
+        
+        Enviroment {
+            variables
+        }
+    } 
+}
+
+
+impl<'a> Enviroment<'a> {
     pub fn new() -> Self{
        Enviroment {
            variables: HashMap::new(),
-           enclosing: None 
        } 
     }
     
-    pub fn set_enclosing(&mut self, enclosing: Box<&Enviroment>) -> Enviroment {
-        self.enclosing = Some(enclosing); 
-        Self
-    }
-    
-    pub fn set(&mut self, name: String, value: Type) {
+    pub fn set(&mut self, name: String, value: &'a mut Type<'a>) {
         self.variables.insert(name, value);      
     }  
     
-    pub fn get(&mut self, name: String) -> Type {
-        if self.variables.contains_key(name.as_str()) {
-            self.variables.get(name.as_str()).unwrap().to_owned()
-        }
-        
-        else { 
-            self.enclosing.unwrap().get(name)
-        } 
+    pub fn get(&mut self, name: String) -> &'a mut Type {
+        *self.variables.get(name.as_str()).unwrap()
+    }
+    
+    pub fn get_variable_names(&mut self) -> Vec<String> {
+        self.variables.keys().map(|key| key.clone()).collect() 
     }
 }

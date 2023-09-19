@@ -82,9 +82,9 @@ pub fn parse(expression_ast: &JsonValue) -> Box<Expression> {
 }
 
 pub fn parse_file(expression_ast: &JsonValue) -> Box<Expression> {
-    let expression: Box<Expression> = parse(&expression_ast[EXPRESSION]);
+    let expr: Box<Expression> = parse(&expression_ast[EXPRESSION]);
     
-    Box::new(Expression::File {expression})
+    Box::new(Expression::File {expr})
 }
 
 fn  parse_print(expression_ast: &JsonValue) -> Box<Expression> {

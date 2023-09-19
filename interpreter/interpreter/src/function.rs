@@ -1,18 +1,19 @@
+use std::sync::Mutex;
 use crate::enviroment::Enviroment;
 use crate::expression::Expression;
 use crate::language_type::Type;
-struct Function {
-   parameters: Vec<String>, 
-   body: Type,
-   closure: Box<Enviroment> 
+
+#[derive(Clone)]
+pub struct Function<'a> {
+   pub parameters: Vec<String>, 
+   pub body: &'a Expression,
 }
 
-impl Function {
-   pub fn new(parameters: Vec<String>, body: Type, closure: Box<Enviroment>) -> Self {
+impl<'a> Function<'a> {
+   pub fn new(parameters: Vec<String>, body: &'a Expression) -> Self {
        Function {
            parameters,
            body,  
-           closure
        }
    } 
 }
