@@ -1,14 +1,14 @@
 use std::sync::Mutex;
 use crate::function::Function;
-pub enum Type<'a> {
+pub enum Type {
     Int(i32),
     Str(String),
     Bool(bool),
-    Tuple((Box<Type<'a>>, Box<Type<'a>>)),
-    Function(Function<'a>),
+    Tuple((Box<Type>, Box<Type>)),
+    Function(Function),
 }
 
-impl<'a> Clone for Type<'a> {
+impl Clone for Type {
     fn clone(&self) -> Self {
         match self  { 
            Type::Int(value) => Type::Int(value.clone()),
@@ -20,7 +20,7 @@ impl<'a> Clone for Type<'a> {
     } 
 }
 
-impl<'a> Type<'a> {
+impl Type {
     pub fn to_string(&self) -> String {
         match self {
             Type::Int(value) => value.to_string(),
@@ -38,9 +38,9 @@ impl<'a> Type<'a> {
         }
     }
     
-    pub fn to_function(&self) -> Option<&'a mut Function> {
+    pub fn to_function(&self) -> Option<Function> {
         match self {
-            Type::Function(value) => Some(*value),
+            Type::Function(value) => Some(value.clone()),
             _ => None
         }
     }
@@ -51,8 +51,15 @@ impl<'a> Type<'a> {
             _ => None
         }
     }
+    
+    pub  fn to_int(&self) -> Option<i32>{
+        match self {
+            Type::Int(value) => Some(value.clone()),
+            _ => None
+        }   
+    }
 
-    pub fn add(left_value: &mut Type, right_value: &mut Type) -> Option<Type<'a>> {
+    pub fn add(left_value: &mut Type, right_value: &mut Type) -> Option<Type> {
         match (left_value, right_value) {
             (Type::Str(left), Type::Str(right)) => Some(Type::Str(left.clone() + right.as_str())),
             (Type::Int(left), Type::Str(right)) => Some(Type::Str(left.to_string() + right.as_str())),
@@ -62,28 +69,28 @@ impl<'a> Type<'a> {
         }
     }
 
-    pub fn sub(left_value: &mut Type, right_value: &mut Type) -> Option<Type<'a>> {
+    pub fn sub(left_value: &mut Type, right_value: &mut Type) -> Option<Type> {
         match (left_value, right_value) {
-            (Type::Int(left), Type::Int(right)) => Some(Type::Int(left.clone() + right.clone())),
+            (Type::Int(left), Type::Int(right)) => Some(Type::Int(left.clone() - right.clone())),
             _ => None
         }
     }
 
-    pub fn mul(left_value: &mut Type, right_value: &mut Type) -> Option<Type<'a>> {
+    pub fn mul(left_value: &mut Type, right_value: &mut Type) -> Option<Type> {
         match (left_value, right_value) {
             (Type::Int(left), Type::Int(right)) => Some(Type::Int(left.clone() * right.clone())),
             _ => None
         }
     }
 
-    pub fn div(left_value: &mut Type, right_value: &mut Type) -> Option<Type<'a>> {
+    pub fn div(left_value: &mut Type, right_value: &mut Type) -> Option<Type> {
         match (left_value, right_value) {
             (Type::Int(left), Type::Int(right)) => Some(Type::Int(left.clone() / right.clone())),
             _ => None
         }
     }
 
-    pub fn remainder(left_value: &mut Type, right_value: &mut Type) -> Option<Type<'a>> {
+    pub fn remainder(left_value: &mut Type, right_value: &mut Type) -> Option<Type> {
         match (left_value, right_value) {
             (Type::Int(left), Type::Int(right)) => Some(Type::Int(left.clone() % right.clone())),
             _ => None

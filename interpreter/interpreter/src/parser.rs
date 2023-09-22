@@ -1,4 +1,4 @@
-use crate::expression::{Expression, LiteralValue};
+use crate::expression::{BinaryOperator, Expression, LiteralValue};
 use json::{JsonValue, value};
 
 const KIND: &str = "kind";
@@ -6,7 +6,7 @@ const VALUE: &str = "value";
 const CONDITION: &str = "condition";
 const THEN_BRANCH: &str = "then";
 const ELSE_BRANCH: &str = "otherwise";
-const VARIABLE_NAME: &str = "text";
+const VARIABLE_NAME: &str = "name";
 const PARAMETERS: &str = "parameters";
 const FUNCTION_BODY: &str = "value";
 const PARAMETER_NAME: &str = "text";
@@ -18,6 +18,9 @@ const TUPLE_FIRST_ELEMENT: &str = "first";
 const TUPLE_SECOND_ELEMENT: &str = "second";
 const TUPLE_VALUE: &str = "value";
 const EXPRESSION: &str = "expression";
+const LEFT: &str = "lhs";
+const RIGHT: &str = "rhs";
+const OPERATOR: &str = "op";
 
 fn to_string(str: &str) -> String {
     String::from(str)
@@ -28,6 +31,7 @@ enum ExpressionKind {
     Str,
     Let,
     Var,
+    Binary,
     Function,
     Tuple,
     Call,
@@ -46,6 +50,7 @@ impl ExpressionKind {
           "Str" => Some(ExpressionKind::Str),
           "Var" => Some(ExpressionKind::Var),
           "Let" => Some(ExpressionKind::Let),
+          "Binary" => Some(ExpressionKind::Binary),
           "Function" => Some(ExpressionKind::Function),
           "Tuple" => Some(ExpressionKind::Tuple),
           "Call" => Some(ExpressionKind::Call),
@@ -67,7 +72,8 @@ pub fn parse(expression_ast: &JsonValue) -> Box<Expression> {
         ExpressionKind::Int => parse_int_literal(&expression_ast),
         ExpressionKind::Str => parse_string_literal(&expression_ast),
         ExpressionKind::Var => parse_var(&expression_ast),
-        ExpressionKind::Let => parse_var_declaration(expression_ast),
+        ExpressionKind::Let => parse_var_declaration(&expression_ast),
+        ExpressionKind::Binary => parse_binary_expression(&expression_ast),
         ExpressionKind::Function => parse_function_declaration(&expression_ast),
         ExpressionKind::Tuple => parse_tuple(&expression_ast),
         ExpressionKind::Call => parse_call(&expression_ast),
@@ -132,8 +138,16 @@ fn parse_function_declaration(expression_ast: &JsonValue) -> Box<Expression> {
     Box::new(Expression::Lambda {parameters, body})
 }
 
+fn parse_binary_expression(expression_ast: &JsonValue) -> Box<Expression> {
+    let left = parse(&expression_ast[LEFT]);
+    let operator = BinaryOperator::from_string(expression_ast[OPERATOR].as_str().unwrap()).unwrap(); 
+    let right = parse(&expression_ast[RIGHT]);
+    
+    Box::new(Expression::Binary {left, operator, right})
+}
+
 fn parse_var(expression_ast: &JsonValue) -> Box<Expression> {
-    let name = expression_ast[VARIABLE_NAME].as_str().unwrap().to_string();
+    let name = expression_ast[TEXT].as_str().unwrap().to_string();
 
     Box::new(Expression::VarExpression {name})
 }
@@ -156,7 +170,6 @@ fn parse_if(expression_ast: &JsonValue) -> Box<Expression> {
 
 fn parse_string_literal(expression_ast: &JsonValue) -> Box<Expression> {
     let value: String = expression_ast[VALUE].as_str().unwrap().to_string();
-    println!("{}", value);
 
     Box::new(Expression::Literal {value: LiteralValue::Str(value)})
 }

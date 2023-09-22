@@ -4,13 +4,13 @@ use crate::expression::Expression;
 use crate::language_type::Type;
 
 #[derive(Clone)]
-pub struct Function<'a> {
+pub struct Function {
    pub parameters: Vec<String>, 
-   pub body: &'a Expression,
+   pub body: Expression,
 }
 
-impl<'a> Function<'a> {
-   pub fn new(parameters: Vec<String>, body: &'a Expression) -> Self {
+impl Function {
+   pub fn new(parameters: Vec<String>, body: Expression) -> Self {
        Function {
            parameters,
            body,  

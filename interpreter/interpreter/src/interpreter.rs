@@ -6,17 +6,18 @@ use crate::language_type::Type;
 use crate::function::{Function};
 use crate::language_type::Type::Str;
 
-struct Interpreter<'a> {
-    expression: Expression,
-    enviroment: Enviroment<'a>,
+pub struct Interpreter {
+    enviroment: Enviroment,
 }
 
-impl<'a> Interpreter<'a> {
-    pub fn new(expression: Expression) -> Self {
-        Interpreter { expression: expression, enviroment: Enviroment::new() }
+impl Interpreter {
+    pub fn new() -> Self {
+        Interpreter { enviroment: Enviroment::new() }
     }
 
-    pub fn interpret() {}
+    pub fn interpret(&mut self, expression: Expression) {
+        self.eval(expression); 
+    }
 
     pub fn eval(&mut self, expression: Expression) -> Type {
         match expression {
@@ -50,26 +51,23 @@ impl<'a> Interpreter<'a> {
     }
 
     fn eval_function_declaration<'b>(&mut self, parameters: Vec<String>, body: Box<Expression>) -> Type {
-        Type::Function(Function::new(parameters, body.as_ref()))
+        Type::Function(Function::new(parameters, body.as_ref().clone()))
     }
 
     fn eval_call(&mut self, callee: Box<Expression>, arguments: Vec<Box<Expression>>) -> Type {
-        let outer_scope_enviromet: Enviroment = self.enviroment.clone();
-        let function: &mut Function = self.eval(*callee).to_function().unwrap();
+        let outer_scope_enviroment: Enviroment = self.enviroment.clone();
+        let function: Function = self.eval(*callee).to_function().unwrap();
 
-        let mut evaluated_arguments: Vec<&mut Type>;
+        let mut evaluated_arguments: Vec<Type> = vec![];
         for argument in arguments {
-            evaluated_arguments.push(&mut self.eval(*argument));    
+            evaluated_arguments.push(self.eval(*argument));    
         }
 
-        function.parameters.iter()
-            .zip(evaluated_arguments.iter_mut())
-            .for_each(|(parameter_name, parameter_value)| 
-                self.enviroment.set(parameter_name.clone(), parameter_value));
-        
-        
+        for (parameter_name, parameter_value) in function.parameters.iter().zip(evaluated_arguments.iter_mut()) {
+            self.enviroment.set(parameter_name.clone(), parameter_value.clone())   
+        }
         let value_to_return = self.eval(function.body);
-        self.enviroment = outer_scope_enviromet;
+        self.enviroment = outer_scope_enviroment;
         
         value_to_return
     }
@@ -77,7 +75,7 @@ impl<'a> Interpreter<'a> {
     fn eval_var_declaration(&mut self, name: String, value: Box<Expression>, next: Box<Expression>) -> Type {
         let name: String = name.clone(); 
         let value: Type = self.eval(*value);
-        self.enviroment.set(name, &mut value.clone());
+        self.enviroment.set(name, value.clone());
         
         self.eval(*next)
     }
@@ -87,19 +85,19 @@ impl<'a> Interpreter<'a> {
         let mut right: Type = self.eval(*right);
         
         let result = match operator { 
-            BinaryOperator::Addition => &mut Type::add(&mut left, &mut right).unwrap(),
-            BinaryOperator::Subtraction => &mut Type::sub(&mut left, &mut right).unwrap(),
-            BinaryOperator::Multiplication => &mut Type::mul(&mut left, &mut right).unwrap(),
-            BinaryOperator::Division => &mut Type::div(&mut left, &mut right).unwrap(),
-            BinaryOperator::Remainder => &mut Type::remainder(&mut left, &mut right).unwrap(),
-            BinaryOperator::Equal => &mut Type::Bool(Type::equal(&mut left, &mut right)),
-            BinaryOperator::NotEqual => &mut Type::Bool(Type::not_equal(&mut left, &mut right)),
-            BinaryOperator::GreaterThan => &mut Type::Bool(Type::greater_than(&mut left, &mut right)),
-            BinaryOperator::LessThan => &mut Type::Bool(Type::less_than(&mut left, &mut right)),
-            BinaryOperator::GreaterThanEqual => &mut Type::Bool(Type::greater_than_equal(&mut left, &mut right)),
-            BinaryOperator::LessThanEqual => &mut Type::Bool(Type::less_than_equal(&mut left, &mut right)),
-            BinaryOperator::And => &mut Type::Bool(Type::and(&mut left, &mut right)),
-            BinaryOperator::Or => &mut Type::Bool(Type::or(&mut left, &mut right)),
+            BinaryOperator::Addition => Type::add(&mut left, &mut right).unwrap(),
+            BinaryOperator::Subtraction => Type::sub(&mut left, &mut right).unwrap(),
+            BinaryOperator::Multiplication => Type::mul(&mut left, &mut right).unwrap(),
+            BinaryOperator::Division => Type::div(&mut left, &mut right).unwrap(),
+            BinaryOperator::Remainder => Type::remainder(&mut left, &mut right).unwrap(),
+            BinaryOperator::Equal =>  Type::Bool(Type::equal(&mut left, &mut right)),
+            BinaryOperator::NotEqual => Type::Bool(Type::not_equal(&mut left, &mut right)),
+            BinaryOperator::GreaterThan => Type::Bool(Type::greater_than(&mut left, &mut right)),
+            BinaryOperator::LessThan => Type::Bool(Type::less_than(&mut left, &mut right)),
+            BinaryOperator::GreaterThanEqual => Type::Bool(Type::greater_than_equal(&mut left, &mut right)),
+            BinaryOperator::LessThanEqual => Type::Bool(Type::less_than_equal(&mut left, &mut right)),
+            BinaryOperator::And => Type::Bool(Type::and(&mut left, &mut right)),
+            BinaryOperator::Or => Type::Bool(Type::or(&mut left, &mut right)),
         };
         
         result.clone()
@@ -127,10 +125,10 @@ impl<'a> Interpreter<'a> {
     }
     
     fn eval_print(&mut self, value: Box<Expression>) -> Type {
-        let value: Type = self.eval(*value);
-        println!("{}", value.to_string());
+        let string: String = self.eval(*value).to_string();
+        println!("{}", string);
         
-        value
+        Type::Str(string)
     }
     
     fn eval_first(&mut self, tuple: Box<Expression>) -> Type {
