@@ -1,7 +1,4 @@
-use std::sync::Mutex;
-use crate::enviroment::Enviroment;
 use crate::expression::Expression;
-use crate::language_type::Type;
 
 #[derive(Clone)]
 pub struct Function {

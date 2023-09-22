@@ -1,10 +1,7 @@
-use std::sync::Mutex;
-use crate::expression::{Expression, LiteralValue, BinaryOperator};
-use crate::enviroment::{Enviroment};
-use crate::function;
+use crate::enviroment::Enviroment;
+use crate::expression::{BinaryOperator, Expression, LiteralValue};
+use crate::function::Function;
 use crate::language_type::Type;
-use crate::function::{Function};
-use crate::language_type::Type::Str;
 
 pub struct Interpreter {
     enviroment: Enviroment,

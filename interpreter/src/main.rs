@@ -1,5 +1,7 @@
 use std::fs;
 use std::path::Path;
+use json::JsonValue;
+use crate::expression::Expression;
 use crate::interpreter::Interpreter;
 
 mod parser;
@@ -10,10 +12,11 @@ mod language_type;
 mod function;
 
 fn main() {
-    let path = Path::new("./asts/combination.json");
-    let json_string = fs::read_to_string(path).expect("The file must exists.");
-    let ast_json = json::parse(json_string.as_str()).unwrap();
-    let parsed = parser::parse_file(&ast_json).as_ref().to_owned();
+    let path: &Path = Path::new("./asts/combination.json");
+    let json_string: String = fs::read_to_string(path).expect("The file must exists.");
+    let ast_json: JsonValue = json::parse(json_string.as_str()).unwrap();
+    
+    let parsed_ast: Expression = parser::parse_file(&ast_json).as_ref().to_owned();
     let mut interpreter = Interpreter::new(); 
-    interpreter.interpret(parsed);
+    interpreter.interpret(parsed_ast);
 }

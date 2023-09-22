@@ -1,5 +1,6 @@
+use json::JsonValue;
+
 use crate::expression::{BinaryOperator, Expression, LiteralValue};
-use json::{JsonValue, value};
 
 const KIND: &str = "kind";
 const VALUE: &str = "value";
