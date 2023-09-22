@@ -12,7 +12,7 @@ mod language_type;
 mod function;
 
 fn main() {
-    let path: &Path = Path::new("./asts/combination.json");
+    let path: &Path = Path::new("./source.rinha.json");
     let json_string: String = fs::read_to_string(path).expect("The file must exists.");
     let ast_json: JsonValue = json::parse(json_string.as_str()).unwrap();
     

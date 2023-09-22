@@ -1,8 +1,8 @@
 FROM rust:latest
 
-WORKDIR /var/app
+WORKDIR /var/rinha
 
-COPY interpreter/ /var/app/
+COPY interpreter/ /var/rinha/
 
 RUN cargo build --release
 
