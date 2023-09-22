@@ -85,19 +85,19 @@ impl Interpreter {
         let mut right: Type = self.eval(*right);
         
         let result = match operator { 
-            BinaryOperator::Addition => Type::add(&mut left, &mut right).unwrap(),
-            BinaryOperator::Subtraction => Type::sub(&mut left, &mut right).unwrap(),
-            BinaryOperator::Multiplication => Type::mul(&mut left, &mut right).unwrap(),
-            BinaryOperator::Division => Type::div(&mut left, &mut right).unwrap(),
-            BinaryOperator::Remainder => Type::remainder(&mut left, &mut right).unwrap(),
-            BinaryOperator::Equal =>  Type::Bool(Type::equal(&mut left, &mut right)),
-            BinaryOperator::NotEqual => Type::Bool(Type::not_equal(&mut left, &mut right)),
-            BinaryOperator::GreaterThan => Type::Bool(Type::greater_than(&mut left, &mut right)),
-            BinaryOperator::LessThan => Type::Bool(Type::less_than(&mut left, &mut right)),
-            BinaryOperator::GreaterThanEqual => Type::Bool(Type::greater_than_equal(&mut left, &mut right)),
-            BinaryOperator::LessThanEqual => Type::Bool(Type::less_than_equal(&mut left, &mut right)),
-            BinaryOperator::And => Type::Bool(Type::and(&mut left, &mut right)),
-            BinaryOperator::Or => Type::Bool(Type::or(&mut left, &mut right)),
+            BinaryOperator::Addition => Type::add(left, right).unwrap(),
+            BinaryOperator::Subtraction => Type::sub(left, right).unwrap(),
+            BinaryOperator::Multiplication => Type::mul(left, right).unwrap(),
+            BinaryOperator::Division => Type::div(left, right).unwrap(),
+            BinaryOperator::Remainder => Type::remainder(left, right).unwrap(),
+            BinaryOperator::Equal =>  Type::Bool(Type::equal(left, right)),
+            BinaryOperator::NotEqual => Type::Bool(Type::not_equal(left, right)),
+            BinaryOperator::GreaterThan => Type::Bool(Type::greater_than(left, right)),
+            BinaryOperator::LessThan => Type::Bool(Type::less_than(left, right)),
+            BinaryOperator::GreaterThanEqual => Type::Bool(Type::greater_than_equal(left, right)),
+            BinaryOperator::LessThanEqual => Type::Bool(Type::less_than_equal(left, right)),
+            BinaryOperator::And => Type::Bool(Type::and(left, right)),
+            BinaryOperator::Or => Type::Bool(Type::or(left, right)),
         };
         
         result.clone()
