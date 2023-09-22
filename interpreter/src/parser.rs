@@ -23,10 +23,6 @@ const LEFT: &str = "lhs";
 const RIGHT: &str = "rhs";
 const OPERATOR: &str = "op";
 
-fn to_string(str: &str) -> String {
-    String::from(str)
-}
-
 enum ExpressionKind {
     Int,
     Str,

@@ -78,8 +78,8 @@ impl Interpreter {
     }
     
     fn eval_binary(&mut self, left: Box<Expression>, operator: BinaryOperator, right: Box<Expression>) -> Type {
-        let mut left: Type = self.eval(*left);
-        let mut right: Type = self.eval(*right);
+        let left: Type = self.eval(*left);
+        let right: Type = self.eval(*right);
         
         let result = match operator { 
             BinaryOperator::Addition => Type::add(left, right).unwrap(),

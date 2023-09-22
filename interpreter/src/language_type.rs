@@ -1,4 +1,3 @@
-use std::sync::Mutex;
 use crate::function::Function;
 pub enum Type {
     Int(i32),
@@ -27,7 +26,7 @@ impl Type {
             Type::Str(value) => value.clone(),
             Type::Bool(value) => value.to_string(),
             Type::Tuple(value) => format!("({},{})", value.0.to_string(), value.1.to_string()),
-            Type::Function(value) => String::from("<#closure>"),
+            Type::Function(_) => String::from("<#closure>"),
         }
     }
     
